@@ -1,0 +1,6 @@
+The Open File and New File buttons are added to the "Make a Modbus pvdevelop Daemon" window.
+This way you can create multiple files "name.mkmodbus" and their "name.cpp", "name.h"
+and its executable "name" (linux) or "name.exe" (windows).
+
+I modified the time "void *watchdogthread(void * arg)" function in gmodbus.cpp because
+slow ethernet connection (wifi) and after losing communication, "modbusdaemon.exe" closes.

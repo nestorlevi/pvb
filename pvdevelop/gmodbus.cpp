@@ -238,7 +238,7 @@ static void generate(const char *name)
   {
     fprintf(fout,"%s","#include \"rlevent.h\"\n");
   }
-  fprintf(fout,"#include \"modbusdaemon.h\"\n");
+  fprintf(fout,"#include \"%s.h\"\n",target);
   fprintf(fout,"\n");
   if(baudrate <= 0) baudrate = 9600;
   fprintf(fout,"#define MODBUS_IDLETIME (4*1000)/%d\n",baudrate/100);
@@ -276,7 +276,7 @@ static void generate(const char *name)
   fprintf(fout,"\n");
   fprintf(fout,"  while(1)\n");
   fprintf(fout,"  {\n");
-  fprintf(fout,"    rlsleep(5000);\n");
+  fprintf(fout,"    rlsleep(60000);\n");
   fprintf(fout,"    if(cnt1 == watchcnt1) break;\n");
   fprintf(fout,"    cnt1 = watchcnt1;\n");
   fprintf(fout,"  }\n");
@@ -315,7 +315,7 @@ static void generate(const char *name)
   fprintf(fout,"    {\n");
   fprintf(fout,"      writeErrorCount++;\n");
   fprintf(fout,"      if(writeErrorCount >= 256*128) writeErrorCount = 0;\n");
-  fprintf(fout,"      shm.write(modbusdaemon_WRITE_ERROR_COUNT_BASE,&writeErrorCount,2);\n");
+  fprintf(fout,"      shm.write(%s_WRITE_ERROR_COUNT_BASE,&writeErrorCount,2);\n",target);
   fprintf(fout,"    }\n");
   strcpy(line, "    printf(\"mbx ret=%d slave=%d function=%d buf[2]=%d\\n\",ret,slave,function,buf[2]);");
   fprintf(fout,"%s\n",line);
@@ -342,7 +342,7 @@ static void generate(const char *name)
   fprintf(fout,"  {\n");
   fprintf(fout,"    readErrorCount++;\n");
   fprintf(fout,"    if(readErrorCount >= 256*128) readErrorCount = 0;\n");
-  fprintf(fout,"    shm.write(modbusdaemon_READ_ERROR_COUNT_BASE,&readErrorCount,2);\n");
+  fprintf(fout,"    shm.write(%s_READ_ERROR_COUNT_BASE,&readErrorCount,2);\n",target);
   fprintf(fout,"  }\n");
   if(eventport != -1)
   {
@@ -394,14 +394,14 @@ static void generate(const char *name)
   fprintf(fout,"  thread.create(reader,NULL);\n");
   fprintf(fout,"  watchdog.create(watchdogthread,NULL);\n");
   fprintf(fout,"\n");
-  fprintf(fout,"  shm.write(modbusdaemon_LIFE_COUNTER_BASE,&lifeCounter,2);\n");
-  fprintf(fout,"  shm.write(modbusdaemon_READ_ERROR_COUNT_BASE,&readErrorCount,2);\n");
-  fprintf(fout,"  shm.write(modbusdaemon_WRITE_ERROR_COUNT_BASE,&writeErrorCount,2);\n");
+  fprintf(fout,"  shm.write(%s_LIFE_COUNTER_BASE,&lifeCounter,2);\n",target);
+  fprintf(fout,"  shm.write(%s_READ_ERROR_COUNT_BASE,&readErrorCount,2);\n",target);
+  fprintf(fout,"  shm.write(%s_WRITE_ERROR_COUNT_BASE,&writeErrorCount,2);\n",target);
   fprintf(fout,"  while(1)\n");
   fprintf(fout,"  {\n");
   fprintf(fout,"    lifeCounter++;\n");
   fprintf(fout,"    if(lifeCounter >= 256*128) lifeCounter = 0;\n");
-  fprintf(fout,"    shm.write(modbusdaemon_LIFE_COUNTER_BASE,&lifeCounter,2);\n");
+  fprintf(fout,"    shm.write(%s_LIFE_COUNTER_BASE,&lifeCounter,2);\n",target);
   fprintf(fout,"    offset = 0;\n");
   fprintf(fout,"    //    modbusCycle(offset, slave, function, start_adr, num_register);\n");
   //fprintf(fout,"    ret = modbusCycle(offset, 1, rlModbus::ReadInputStatus, 0, 10);\n");
@@ -452,7 +452,8 @@ static void generate(const char *name)
 
 int gmodbus(const char *name)
 {
-  strcpy(target,"modbusdaemon");
+  memset(target, 0, sizeof target);
+  strncpy(target,name,strlen(name)-9);
   init(name);
   generate(name);
   return 0;
