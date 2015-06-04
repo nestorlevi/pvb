@@ -25,9 +25,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
+QFileInfo f_info;
 static char line[256*256];
-static char target[4096];
+static char *target;
 static char shared_memory[4096];
 static char mailbox[4096];
 #define SERIAL 1
@@ -146,7 +146,7 @@ static void init(const char *name)
     exit(-1);
   }
 
-  sprintf(line,"%s.h",target);
+  sprintf(line,"%s.h",f_info.filePath().remove(".mkmodbus").toUtf8().data());
   fout = fopen(line,"w");
   if(fout == NULL)
   {
@@ -212,7 +212,7 @@ static void generate(const char *name)
   char *cptr;
   int  slave,function,start_adr,num_register;
 
-  sprintf(line,"%s.cpp",target);
+  sprintf(line,"%s.cpp",f_info.filePath().remove(".mkmodbus").toUtf8().data());
   fout = fopen(line,"w");
   if(fout == NULL)
   {
@@ -452,9 +452,9 @@ static void generate(const char *name)
 
 int gmodbus(const char *name)
 {
-  memset(target, 0, sizeof target);
-  strncpy(target,name,strlen(name)-9);
-  init(name);
-  generate(name);
-  return 0;
+    f_info = QFileInfo(name);
+    target = f_info.fileName().remove(".mkmodbus").toUtf8().data();
+    init(name);
+    generate(name);
+    return 0;
 }
